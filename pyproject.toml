@@ -1,0 +1,17 @@
+[project]
+name = "poketwo-market-intelligence-ai"
+version = "0.1.0"
+description = "Standalone Discord bot for Poketwo auction market intelligence."
+requires-python = ">=3.10,<3.11"
+dependencies = [
+  "discord.py>=2.3,<3",
+  "python-dotenv>=1.0,<2",
+  "pandas>=2.0,<3",
+  "numpy>=1.24,<3",
+  "scikit-learn>=1.3,<2",
+  "joblib>=1.3,<2",
+  "openai>=2.0,<3",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

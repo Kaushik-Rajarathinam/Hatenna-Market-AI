@@ -1,0 +1,17 @@
+.DS_Store
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Keep real auction data and trained models private.
+data/*.db
+data/*.db-*
+data/*.sqlite
+data/*.sqlite-*
+data/*.sqlite3
+data/*.sqlite3-*
+models/*.pkl
+models/*.joblib
+models/model_metadata.json
