@@ -17,6 +17,7 @@ EXTENSIONS = [
     "market_ai.commands.trend",
     "market_ai.commands.predict",
     "market_ai.commands.advisor",
+    "market_ai.commands.auction_agent",
 ]
 
 

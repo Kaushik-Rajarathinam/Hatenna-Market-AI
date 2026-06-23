@@ -214,9 +214,25 @@ Once a model exists, use:
 !price what is the price of a shiny Gible?
 !pricecheck how much is shiny Gible worth?
 !askmarket what should a shiny Garchomp 91 cost?
+
+!auctionai what is the most expensive shiny?
+!auctionai what pokemon sells the most?
+!auctionai what shiny markets are rising?
+!auctionai what has the highest median shiny value?
+!auctionai what is the most expensive event pokemon?
 ```
 
 `!marketai` gathers real SQL stats, trend data, recent comparable sales, and the saved ML prediction first. The LLM only explains that summarized payload; it does not query SQLite directly.
+
+`!auctionai` is a broader auction intelligence agent. It routes questions into safe built-in SQLite tools first, then asks the configured LLM to explain the structured result. It can answer top-sale, volume, median-value, and rising/falling market questions without letting the LLM run SQL.
+
+Category questions such as event, legendary, mythical, or ultra beast require local metadata. Copy `data/pokemon_metadata.example.csv` to `data/pokemon_metadata.csv` and fill in the category flags:
+
+```text
+name,event,legendary,mythical,ultra_beast
+Rayquaza,false,true,false,false
+Marshadow,false,false,true,false
+```
 
 ## LLM Layer
 

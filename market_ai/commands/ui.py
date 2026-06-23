@@ -328,6 +328,76 @@ if hasattr(discord.ui, "LayoutView"):
             self._rebuild()
             await interaction.response.edit_message(view=self)
 
+
+    class AuctionAgentLayoutView(HatennaLayoutView):
+        def __init__(self, owner_id: int, payload: dict[str, Any], explanation: str, explanation_source: str) -> None:
+            self.payload = payload
+            self.explanation = explanation
+            self.explanation_source = explanation_source
+            self.mode = "answer"
+            super().__init__(owner_id)
+            self._rebuild()
+
+        def _row_summary(self) -> str:
+            rows = self.payload.get("rows") or []
+            if not rows:
+                return "-# No matching rows returned."
+            lines: list[str] = []
+            tool = self.payload.get("tool")
+            for index, row in enumerate(rows[:10], start=1):
+                if tool == "top_sales":
+                    flags = []
+                    if row.get("shiny"):
+                        flags.append("shiny")
+                    if row.get("gmax"):
+                        flags.append("gmax")
+                    flag_text = f" ({', '.join(flags)})" if flags else ""
+                    iv = row.get("iv_percent")
+                    iv_text = f" • IV {iv:.1f}%" if isinstance(iv, (int, float)) else ""
+                    lines.append(f"`{index}` **{row['name']}**{flag_text} • {row['price_text']}{iv_text} • {compact_date(row.get('auction_date'))}")
+                elif tool == "most_traded":
+                    lines.append(f"`{index}` **{row['name']}** • {row['sale_count']:,} sales • avg {row['average_price_text']}")
+                elif tool == "trend_scan":
+                    lines.append(
+                        f"`{index}` **{row['name']}** • {row['percent_change']:+.1f}% "
+                        f"• {row['prior_median_text']} -> {row['recent_median_text']}"
+                    )
+                else:
+                    lines.append(f"`{index}` **{row['name']}** • median {row['median_price_text']} • {row['sample_size']:,} sales")
+            return "\n".join(lines)
+
+        def _rebuild(self) -> None:
+            self.clear_items()
+            card = discord.ui.Container(accent_color=HATENNA_DEEP_PINK)  # type: ignore[attr-defined]
+            card.add_item(discord.ui.TextDisplay("### Auction Intelligence"))  # type: ignore[attr-defined]
+            card.add_item(discord.ui.TextDisplay(f"-# {self.payload.get('question')}"))  # type: ignore[attr-defined]
+            note = self.payload.get("note")
+            if note:
+                card.add_item(discord.ui.TextDisplay(f"**Note**\n{note}"))  # type: ignore[attr-defined]
+                card.add_item(self._separator())  # type: ignore[attr-defined]
+            if self.mode == "rows":
+                card.add_item(discord.ui.TextDisplay(f"**Tool:** `{self.payload.get('tool')}`"))  # type: ignore[attr-defined]
+                card.add_item(discord.ui.TextDisplay(self._row_summary()))  # type: ignore[attr-defined]
+            else:
+                card.add_item(discord.ui.TextDisplay(self.explanation[:3800]))  # type: ignore[attr-defined]
+            card.add_item(self._separator())  # type: ignore[attr-defined]
+            card.add_item(discord.ui.TextDisplay(f"-# {self.explanation_source}. SQLite tools ran before the LLM."))  # type: ignore[attr-defined]
+            self.add_item(card)
+            row = discord.ui.ActionRow()  # type: ignore[attr-defined]
+            row.add_item(self._button("Answer", discord.ButtonStyle.primary, self.show_answer, disabled=self.mode == "answer"))
+            row.add_item(self._button("Rows", discord.ButtonStyle.secondary, self.show_rows, disabled=self.mode == "rows"))
+            self.add_item(row)
+
+        async def show_answer(self, interaction: discord.Interaction) -> None:
+            self.mode = "answer"
+            self._rebuild()
+            await interaction.response.edit_message(view=self)
+
+        async def show_rows(self, interaction: discord.Interaction) -> None:
+            self.mode = "rows"
+            self._rebuild()
+            await interaction.response.edit_message(view=self)
+
 else:
     HatennaLayoutView = None  # type: ignore[assignment]
     MarketStatsLayoutView = None  # type: ignore[assignment]
@@ -335,3 +405,4 @@ else:
     TrendLayoutView = None  # type: ignore[assignment]
     RecentSalesLayoutView = None  # type: ignore[assignment]
     AdvisorLayoutView = None  # type: ignore[assignment]
+    AuctionAgentLayoutView = None  # type: ignore[assignment]
