@@ -8,6 +8,7 @@ from market_ai.ai.llm import explain_market_payload
 from market_ai.analytics.advisor import collect_market_advice_payload, parse_advisor_query
 from market_ai.commands.formatting import format_price
 from market_ai.commands.ui import AdvisorLayoutView
+from market_ai.config import get_settings
 from market_ai.db import Database
 
 
@@ -38,8 +39,7 @@ class AdvisorCommands(commands.Cog):
         self.bot = bot
         self.database = database
 
-    @commands.command(name="marketai", aliases=["explainprice", "advisor"])
-    async def marketai(self, ctx: commands.Context, *, query: str) -> None:
+    async def _answer_market_question(self, ctx: commands.Context, query: str) -> None:
         try:
             filters, iv_percent, listing_price = parse_advisor_query(query)
             with self.database.connect() as conn:
@@ -55,7 +55,8 @@ class AdvisorCommands(commands.Cog):
 
         try:
             explanation = explain_market_payload(payload)
-            explanation_source = "OpenAI explanation"
+            provider = get_settings().llm_provider
+            explanation_source = "Ollama local LLM explanation" if provider == "ollama" else "OpenAI explanation"
         except RateLimitError:
             explanation = fallback_explanation(payload)
             explanation_source = "Local fallback explanation; OpenAI rate limit or quota hit"
@@ -79,6 +80,14 @@ class AdvisorCommands(commands.Cog):
             embed.add_field(name="ML Estimate", value=format_price(prediction["price"]), inline=True)
         embed.set_footer(text=f"{explanation_source}. Uses real auction stats first; AI only explains summarized data.")
         await ctx.reply(embed=embed)
+
+    @commands.command(name="marketai", aliases=["explainprice", "advisor"])
+    async def marketai(self, ctx: commands.Context, *, query: str) -> None:
+        await self._answer_market_question(ctx, query)
+
+    @commands.command(name="askmarket", aliases=["price", "pricecheck", "value"])
+    async def askmarket(self, ctx: commands.Context, *, question: str) -> None:
+        await self._answer_market_question(ctx, question)
 
 
 async def setup(bot: commands.Bot) -> None:

@@ -79,7 +79,13 @@ python -m market_ai.bot
 
 `AUCTIONS_DB_PATH`: Optional SQLite path. Defaults to `data/auctions.db`.
 
-`OPENAI_API_KEY`: Reserved for Phase 3 LLM explanations.
+`LLM_PROVIDER`: Explanation provider. Use `ollama` for a free local model, `openai` for OpenAI, or `off` for deterministic fallback only.
+
+`OLLAMA_MODEL`: Local Ollama model. Defaults to `llama3.1:8b`.
+
+`OLLAMA_BASE_URL`: Ollama server URL. Defaults to `http://localhost:11434`.
+
+`OPENAI_API_KEY`: Optional OpenAI key if `LLM_PROVIDER=openai`.
 
 `OPENAI_MODEL`: Optional model for explanations. Defaults to `gpt-5.4-nano`.
 
@@ -205,13 +211,31 @@ Once a model exists, use:
 
 !marketai shiny Garchomp 91 750000
 !advisor gmax Charizard 85
+!price what is the price of a shiny Gible?
+!pricecheck how much is shiny Gible worth?
+!askmarket what should a shiny Garchomp 91 cost?
 ```
 
 `!marketai` gathers real SQL stats, trend data, recent comparable sales, and the saved ML prediction first. The LLM only explains that summarized payload; it does not query SQLite directly.
 
 ## LLM Layer
 
-Phase 3 will add optional OpenAI explanations. The LLM will only receive structured statistics already computed by the app. It will not query SQLite directly.
+The explanation layer supports local Ollama models and OpenAI. The LLM only receives structured statistics already computed by the app. It does not query SQLite directly.
+
+For free local explanations, install Ollama and pull Llama 3.1 8B:
+
+```bash
+ollama pull llama3.1:8b
+```
+
+Then set:
+
+```env
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=llama3.1:8b
+OLLAMA_BASE_URL=http://localhost:11434
+OPENAI_EXPLANATIONS_ENABLED=false
+```
 
 ## Roadmap
 
